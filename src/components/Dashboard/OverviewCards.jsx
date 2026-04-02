@@ -1,9 +1,16 @@
-import React from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Users, CreditCard, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { TrendingUp, TrendingDown, DollarSign, Users, CreditCard, Activity, Edit2, Check, X } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 
 export const OverviewCards = () => {
-  const { totalBalance, monthlyIncome, monthlyExpenses, role, adminMetrics, monthlyBudget } = useFinance();
+  const { totalBalance, monthlyIncome, monthlyExpenses, role, adminMetrics, monthlyBudget, setMonthlyBudget, budgetStatus } = useFinance();
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
+  const [tempBudget, setTempBudget] = useState(monthlyBudget);
+
+  const handleSaveBudget = () => {
+    setMonthlyBudget(Number(tempBudget));
+    setIsEditingBudget(false);
+  };
 
   const userCards = [
     {
@@ -32,11 +39,11 @@ export const OverviewCards = () => {
       name: 'Monthly Expenses',
       amount: monthlyExpenses,
       icon: TrendingDown,
-      color: 'bg-rose-500',
-      textColor: 'text-rose-600',
-      bgLight: 'bg-rose-50',
-      bgDark: 'dark:bg-rose-900/20',
-      gradient: 'from-rose-500 to-pink-500',
+      color: budgetStatus.type === 'critical' ? 'bg-rose-500' : budgetStatus.type === 'warning' ? 'bg-amber-500' : 'bg-primary-500',
+      textColor: budgetStatus.type === 'critical' ? 'text-rose-600' : budgetStatus.type === 'warning' ? 'text-amber-600' : 'text-primary-600',
+      bgLight: budgetStatus.type === 'critical' ? 'bg-rose-50' : budgetStatus.type === 'warning' ? 'bg-amber-50' : 'bg-primary-50',
+      bgDark: budgetStatus.type === 'critical' ? 'dark:bg-rose-900/20' : budgetStatus.type === 'warning' ? 'dark:bg-amber-900/20' : 'dark:bg-primary-900/20',
+      gradient: budgetStatus.type === 'critical' ? 'from-rose-500 to-pink-500' : budgetStatus.type === 'warning' ? 'from-amber-500 to-orange-500' : 'from-primary-500 to-indigo-500',
       prefix: '$',
       hasBudget: true
     },
@@ -110,17 +117,52 @@ export const OverviewCards = () => {
             
             {card.hasBudget ? (
               <div className="mt-5 relative z-10">
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium text-slate-500 dark:text-slate-400">Budget Limit</span>
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
-                    ${monthlyBudget?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                <div className="flex justify-between items-center text-xs mb-2">
+                  <span className="font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    Monthly Budget
+                    {!isEditingBudget && (
+                      <button 
+                        onClick={() => setIsEditingBudget(true)}
+                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400 hover:text-primary-600 transition-colors"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </button>
+                    )}
                   </span>
+                  {isEditingBudget ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        value={tempBudget}
+                        onChange={(e) => setTempBudget(e.target.value)}
+                        className="w-20 px-1 py-0.5 border border-primary-300 dark:border-primary-700 rounded bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        autoFocus
+                      />
+                      <button onClick={handleSaveBudget} className="p-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded">
+                        <Check className="h-3 w-3" />
+                      </button>
+                      <button onClick={() => setIsEditingBudget(false)} className="p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className={`font-bold ${budgetStatus.type === 'critical' ? 'text-rose-600' : budgetStatus.type === 'warning' ? 'text-amber-600' : 'text-slate-700 dark:text-slate-300'}`}>
+                      ${monthlyBudget?.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                    </span>
+                  )}
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
                   <div 
-                    className="bg-rose-500 h-2 rounded-full transition-all duration-500" 
-                    style={{ width: `${Math.min((card.amount / (monthlyBudget || 1)) * 100, 100)}%` }}
+                    className={`h-2 rounded-full transition-all duration-700 ease-out ${
+                      budgetStatus.type === 'critical' ? 'bg-rose-500' : budgetStatus.type === 'warning' ? 'bg-amber-500' : 'bg-primary-500'
+                    }`} 
+                    style={{ width: `${Math.min(budgetStatus.percentage, 100)}%` }}
                   ></div>
+                </div>
+                <div className="mt-1 flex justify-end">
+                  <span className={`text-[10px] font-bold ${budgetStatus.type === 'critical' ? 'text-rose-600' : budgetStatus.type === 'warning' ? 'text-amber-600' : 'text-slate-500'}`}>
+                    {budgetStatus.percentage.toFixed(0)}% used
+                  </span>
                 </div>
               </div>
             ) : (

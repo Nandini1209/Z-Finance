@@ -60,7 +60,9 @@ export const FinanceProvider = ({ children }) => {
     platformVolume: 1250000.50
   };
 
-  const monthlyBudget = 3000;
+  const [monthlyBudget, setMonthlyBudget] = useState(
+    Number(localStorage.getItem('monthlyBudget')) || 3000
+  );
 
   const { totalBalance, monthlyIncome, monthlyExpenses } = useMemo(() => {
     return transactions.reduce(
@@ -81,6 +83,18 @@ export const FinanceProvider = ({ children }) => {
     );
   }, [transactions]);
 
+  // Handle budget storage
+  useEffect(() => {
+    localStorage.setItem('monthlyBudget', monthlyBudget.toString());
+  }, [monthlyBudget]);
+
+  const budgetStatus = useMemo(() => {
+    const percentage = (monthlyExpenses / (monthlyBudget || 1)) * 100;
+    if (percentage >= 100) return { type: 'critical', message: 'Budget Exceeded!', percentage };
+    if (percentage >= 80) return { type: 'warning', message: 'Approaching Limit', percentage };
+    return { type: 'normal', message: 'On Track', percentage };
+  }, [monthlyExpenses, monthlyBudget]);
+
   return (
     <FinanceContext.Provider
       value={{
@@ -96,6 +110,8 @@ export const FinanceProvider = ({ children }) => {
         monthlyExpenses,
         adminMetrics,
         monthlyBudget,
+        setMonthlyBudget,
+        budgetStatus,
       }}
     >
       {children}

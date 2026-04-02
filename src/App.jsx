@@ -7,6 +7,7 @@ import { SpendingChart } from './components/Dashboard/SpendingChart';
 import { IncomeExpenseChart } from './components/Dashboard/IncomeExpenseChart';
 import { TransactionTable } from './components/Transactions/TransactionTable';
 import { UserManagement } from './components/Admin/UserManagement';
+import { BudgetAlert } from './components/Dashboard/BudgetAlert';
 import { useFinance } from './context/FinanceContext';
 
 function App() {
@@ -53,8 +54,9 @@ function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className="space-y-8"
+                  className="space-y-6"
                 >
+                  <BudgetAlert />
                   <OverviewCards />
                   <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-2">
